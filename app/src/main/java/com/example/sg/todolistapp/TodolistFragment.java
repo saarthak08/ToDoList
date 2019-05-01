@@ -167,12 +167,14 @@ public class TodolistFragment extends Fragment {
 
         setRecyclerView();
         loadData();
-
+        compositeDisposable.add(
         RxTextView.textChangeEvents(searchEditText).skipInitialValue().debounce(300, TimeUnit.MICROSECONDS)
-                .distinctUntilChanged().subscribeWith(new DisposableObserver<TextViewTextChangeEvent>() {
+                .distinctUntilChanged().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribeWith(new DisposableObserver<TextViewTextChangeEvent>() {
             @Override
             public void onNext(TextViewTextChangeEvent textViewTextChangeEvent) {
-                goalAdapter.getFilter().filter(textViewTextChangeEvent.getText());
+                if(textViewTextChangeEvent.getText().toString().length()>0) {
+                    goalAdapter.getFilter().filter(textViewTextChangeEvent.getText().toString());
+                }
             }
 
             @Override
@@ -184,7 +186,7 @@ public class TodolistFragment extends Fragment {
             public void onComplete() {
 
             }
-        });
+        }));
 
 
 
