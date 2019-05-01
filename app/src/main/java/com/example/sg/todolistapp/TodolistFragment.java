@@ -233,7 +233,7 @@ public class TodolistFragment extends Fragment {
     }
 
     private void loadData() {
-        Observable<ToDoListItem> observable=Observable.fromArray(toDoDataManager.getAllToDoListItem_list().toArray(new ToDoListItem[0]);
+        Observable<ToDoListItem> observable=Observable.fromArray(toDoDataManager.getAllToDoListItem_list().toArray(new ToDoListItem[0]));
         compositeDisposable.add(observable.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
         .subscribeWith(new DisposableObserver<ToDoListItem>() {
             @Override
