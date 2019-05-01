@@ -6,13 +6,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,9 +24,15 @@ import com.example.sg.todolistapp.adapter.ToDoListAdapter;
 import com.example.sg.todolistapp.adapter.RecyclerTouchListener;
 import com.example.sg.todolistapp.data.ToDoListItem;
 import com.example.sg.todolistapp.data.ToDoDataManager;
+import com.jakewharton.rxbinding3.widget.RxTextView;
+import com.jakewharton.rxbinding3.widget.TextViewTextChangeEvent;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -162,6 +168,23 @@ public class TodolistFragment extends Fragment {
         setRecyclerView();
         loadData();
 
+        RxTextView.textChangeEvents(searchEditText).skipInitialValue().debounce(300, TimeUnit.MICROSECONDS)
+                .distinctUntilChanged().subscribeWith(new DisposableObserver<TextViewTextChangeEvent>() {
+            @Override
+            public void onNext(TextViewTextChangeEvent textViewTextChangeEvent) {
+                goalAdapter.getFilter().filter(textViewTextChangeEvent.getText());
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
 
 
 
@@ -236,6 +259,7 @@ public class TodolistFragment extends Fragment {
 
     private void loadData() {
         Observable<ToDoListItem> observable=Observable.fromArray(toDoDataManager.getAllToDoListItem_list().toArray(new ToDoListItem[0]));
+        Flowable<ToDoListItem> flowable=observable.toFlowable(BackpressureStrategy.BUFFER);
         compositeDisposable.add(observable.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .map(new Function<ToDoListItem, ToDoListItem>() {
                     @Override
