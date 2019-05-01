@@ -30,6 +30,8 @@ import java.util.List;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
@@ -235,6 +237,19 @@ public class TodolistFragment extends Fragment {
     private void loadData() {
         Observable<ToDoListItem> observable=Observable.fromArray(toDoDataManager.getAllToDoListItem_list().toArray(new ToDoListItem[0]));
         compositeDisposable.add(observable.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .map(new Function<ToDoListItem, ToDoListItem>() {
+                    @Override
+                    public ToDoListItem apply(ToDoListItem toDoListItem) throws Exception {
+                        toDoListItem.setToDoListItemDescription(dateFront+" "+toDoListItem.getToDoListItemPlanedAchievDate());
+                        return toDoListItem;
+                    }
+                })
+                .filter(new Predicate<ToDoListItem>() {
+                    @Override
+                    public boolean test(ToDoListItem toDoListItem) throws Exception {
+                        return toDoListItem.getToDoListItemStatus().equals(taskStatus);
+                    }
+                })
         .subscribeWith(new DisposableObserver<ToDoListItem>() {
             @Override
             public void onNext(ToDoListItem toDoListItem) {
